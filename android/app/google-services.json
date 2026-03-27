@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "741857275005",
+    "project_id": "ai-powered-coach-2026",
+    "storage_bucket": "ai-powered-coach-2026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:741857275005:android:6a04d9e2207d7fc4d81514",
+        "android_client_info": {
+          "package_name": "com.example.ai_powered_coach_2026"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEILKCYKMrCh4e0bZgcvE5_OOOkJXEbGM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
