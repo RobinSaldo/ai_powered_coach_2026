@@ -22,6 +22,7 @@ class SpeechAnalysisResultPage extends StatelessWidget {
         (result['effectivenessScore'] as num?)?.toInt() ?? 0;
     final topic = (result['topic'] as String?)?.trim() ?? '';
     final transcript = (result['transcript'] as String?) ?? '';
+    final detectedFillers = _toDetectedFillers(result['detectedFillers']);
     final strengths = _toStringList(result['strengths']);
     final improvements = _toStringList(result['improvements']);
 
@@ -85,6 +86,27 @@ class SpeechAnalysisResultPage extends StatelessWidget {
                   ),
                 ],
               ),
+              if (detectedFillers.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  'Detected Fillers (Top ${detectedFillers.length})',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: const Color(0xFF123B5C),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: detectedFillers.map((entry) {
+                    return Chip(
+                      avatar: const Icon(Icons.label_outline_rounded, size: 16),
+                      label: Text('${entry.term} x${entry.count}'),
+                    );
+                  }).toList(),
+                ),
+              ],
               const SizedBox(height: 16),
               Text(
                 'Content Assessment',
@@ -220,6 +242,34 @@ class SpeechAnalysisResultPage extends StatelessWidget {
     }
     return const [];
   }
+
+  static List<_DetectedFiller> _toDetectedFillers(dynamic value) {
+    if (value is! List) {
+      return const [];
+    }
+
+    final entries = <_DetectedFiller>[];
+    for (final item in value) {
+      if (item is! Map) {
+        continue;
+      }
+      final map = item.cast<dynamic, dynamic>();
+      final term = (map['term'] as String?)?.trim() ?? '';
+      final count = (map['count'] as num?)?.toInt() ?? 0;
+      if (term.isEmpty || count <= 0) {
+        continue;
+      }
+      entries.add(_DetectedFiller(term: term, count: count));
+    }
+    return entries;
+  }
+}
+
+class _DetectedFiller {
+  const _DetectedFiller({required this.term, required this.count});
+
+  final String term;
+  final int count;
 }
 
 class _ScoreCard extends StatelessWidget {

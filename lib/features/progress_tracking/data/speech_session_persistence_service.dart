@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -72,6 +74,7 @@ class SpeechSessionPersistenceService {
           'words': words,
           'wordsPerMinute': wordsPerMinute,
           'fillerWords': fillerWords,
+          'detectedFillers': analysis['detectedFillers'] ?? const [],
           'strengths': analysis['strengths'] ?? const [],
           'improvements': analysis['improvements'] ?? const [],
           'createdAt': createdAt,
@@ -261,16 +264,84 @@ class SpeechSessionPersistenceService {
       final snapshot = await transaction.get(userRef);
       final data = snapshot.data() ?? <String, dynamic>{};
       final totalSessions = (data['totalSessions'] as num?)?.toInt() ?? 0;
+      final currentStreak = (data['currentStreak'] as num?)?.toInt() ?? 0;
+      final bestStreak = (data['bestStreak'] as num?)?.toInt() ?? 0;
       final currentAverage = (data['avgScore'] as num?)?.toDouble() ?? 0;
+      final lastPracticeDate = _asDateTime(data['lastPracticeDate']);
+
+      final today = _dayOnly(DateTime.now());
+      final normalizedLastPractice = lastPracticeDate == null
+          ? null
+          : _dayOnly(lastPracticeDate);
+
+      int nextCurrentStreak;
+      if (normalizedLastPractice == null) {
+        nextCurrentStreak = 1;
+      } else {
+        final dayGap = today.difference(normalizedLastPractice).inDays;
+        if (dayGap <= 0) {
+          nextCurrentStreak = currentStreak == 0 ? 1 : currentStreak;
+        } else if (dayGap == 1) {
+          nextCurrentStreak = currentStreak <= 0 ? 1 : currentStreak + 1;
+        } else {
+          nextCurrentStreak = 1;
+        }
+      }
+
+      final nextBestStreak = math.max(bestStreak, nextCurrentStreak);
       final newTotal = totalSessions + 1;
       final newAverage =
           ((currentAverage * totalSessions) + latestScore) / newTotal;
+      final inferredSkillLevel = _inferSkillLevel(
+        avgScore: newAverage,
+        totalSessions: newTotal,
+        bestStreak: nextBestStreak,
+      );
 
       transaction.set(userRef, {
         'totalSessions': newTotal,
+        'currentStreak': nextCurrentStreak,
+        'bestStreak': nextBestStreak,
+        'lastPracticeDate': Timestamp.fromDate(today),
+        'lastSessionAt': FieldValue.serverTimestamp(),
         'avgScore': double.parse(newAverage.toStringAsFixed(1)),
+        'skillLevel': inferredSkillLevel,
+        'skillLevelUpdatedAt': FieldValue.serverTimestamp(),
         'lastLoginAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     });
+  }
+
+  String _inferSkillLevel({
+    required double avgScore,
+    required int totalSessions,
+    required int bestStreak,
+  }) {
+    if (totalSessions >= 12 && avgScore >= 82 && bestStreak >= 5) {
+      return 'Advanced';
+    }
+
+    if (totalSessions >= 4 && avgScore >= 68) {
+      return 'Intermediate';
+    }
+
+    return 'Beginner';
+  }
+
+  DateTime? _asDateTime(Object? value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+    return null;
+  }
+
+  DateTime _dayOnly(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
   }
 }

@@ -20,11 +20,17 @@ class SpeechToTextService {
     return _speech.initialize(onStatus: onStatus, onError: onError);
   }
 
-  Future<bool> startListening({required SpeechResultHandler onResult}) async {
+  Future<bool> startListening({
+    required SpeechResultHandler onResult,
+    Duration listenFor = const Duration(minutes: 5),
+    Duration pauseFor = const Duration(seconds: 3),
+    String? localeId,
+  }) async {
     await _speech.listen(
       onResult: onResult,
-      listenFor: const Duration(minutes: 5),
-      pauseFor: const Duration(seconds: 5),
+      listenFor: listenFor,
+      pauseFor: pauseFor,
+      localeId: localeId,
       listenOptions: SpeechListenOptions(
         partialResults: true,
         cancelOnError: false,
@@ -40,5 +46,24 @@ class SpeechToTextService {
 
   Future<void> cancelListening() async {
     await _speech.cancel();
+  }
+
+  Future<String?> resolveBestLocale({
+    required List<String> preferredLocaleIds,
+  }) async {
+    final availableLocales = await _speech.locales();
+    if (availableLocales.isEmpty) {
+      return null;
+    }
+
+    for (final preferred in preferredLocaleIds) {
+      for (final locale in availableLocales) {
+        if (locale.localeId.toLowerCase() == preferred.toLowerCase()) {
+          return locale.localeId;
+        }
+      }
+    }
+
+    return availableLocales.first.localeId;
   }
 }

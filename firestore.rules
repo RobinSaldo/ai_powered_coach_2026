@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasPrivilegedRole() {
+      return isSignedIn()
+             && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+             && (
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+               || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'developer'
+             );
+    }
+
+    function isValidRole(role) {
+      return role == 'user' || role == 'admin' || role == 'developer';
+    }
+
+    match /users/{userId} {
+      allow create: if isOwner(userId)
+                    && request.resource.data.uid == userId
+                    && isValidRole(request.resource.data.role);
+
+      allow read: if isOwner(userId) || hasPrivilegedRole();
+
+      allow update: if (
+                      isOwner(userId)
+                      && request.resource.data.uid == resource.data.uid
+                      && isValidRole(request.resource.data.role)
+                      && (
+                        request.resource.data.role == resource.data.role
+                        || (
+                          !('role' in resource.data)
+                          && request.resource.data.role == 'user'
+                        )
+                      )
+                    )
+                    || (
+                      hasPrivilegedRole()
+                      && request.resource.data.uid == resource.data.uid
+                      && isValidRole(request.resource.data.role)
+                    );
+      allow delete: if false;
+    }
+
+    match /speech_sessions/{sessionId} {
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn()
+                  && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn()
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
+      allow delete: if isSignedIn()
+                    && resource.data.userId == request.auth.uid;
+    }
+
+    match /analysis_results/{analysisId} {
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn()
+                  && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn()
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
+      allow delete: if isSignedIn()
+                    && resource.data.userId == request.auth.uid;
+    }
+
+    match /recommendations/{recommendationId} {
+      allow create: if isSignedIn()
+                    && request.resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn()
+                  && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn()
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == resource.data.userId;
+      allow delete: if isSignedIn()
+                    && resource.data.userId == request.auth.uid;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

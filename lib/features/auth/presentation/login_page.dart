@@ -18,6 +18,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _hidePassword = true;
 
   @override
@@ -61,6 +62,47 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    if (_isLoading || _isGoogleLoading) {
+      return;
+    }
+
+    setState(() {
+      _isGoogleLoading = true;
+    });
+
+    try {
+      final credential = await ref
+          .read(authRepositoryProvider)
+          .signInWithGoogle();
+      if (credential == null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google sign-in cancelled.')),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_authErrorMessage(e))));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cannot complete Google sign-in right now. Check Firebase setup.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
         });
       }
     }
@@ -150,6 +192,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     )
                   : const Icon(Icons.login_rounded),
               label: Text(_isLoading ? 'Signing in...' : 'Login'),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    'or',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                const Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: (_isLoading || _isGoogleLoading)
+                  ? null
+                  : _handleGoogleLogin,
+              icon: _isGoogleLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.g_mobiledata_rounded, size: 28),
+              label: Text(
+                _isGoogleLoading ? 'Connecting...' : 'Continue with Google',
+              ),
             ),
           ],
         ),

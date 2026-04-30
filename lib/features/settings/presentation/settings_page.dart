@@ -1,21 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ai_powered_coach_2026/core/constants/firestore_collections.dart';
+import 'package:ai_powered_coach_2026/core/theme/theme_mode_controller.dart';
 import 'package:ai_powered_coach_2026/core/widgets/app_empty_view.dart';
 import 'package:ai_powered_coach_2026/core/widgets/app_error_view.dart';
 import 'package:ai_powered_coach_2026/core/widgets/app_loading_view.dart';
 import 'package:ai_powered_coach_2026/services/notifications/practice_reminder_service.dart';
 
-class SettingsPage extends StatefulWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  State<SettingsPage> createState() => _SettingsPageState();
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _isSaving = false;
   bool _isResettingRecommendations = false;
   bool _isSendingTestReminder = false;
@@ -191,6 +193,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeModeControllerProvider);
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       return const Scaffold(
@@ -399,6 +402,31 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 14),
                 _SettingsCard(
+                  title: 'Appearance',
+                  child: DropdownButtonFormField<String>(
+                    initialValue: themeModeToStorageValue(themeMode),
+                    items: const [
+                      DropdownMenuItem(value: 'system', child: Text('System')),
+                      DropdownMenuItem(value: 'light', child: Text('Light')),
+                      DropdownMenuItem(value: 'dark', child: Text('Dark')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) {
+                        return;
+                      }
+                      final nextThemeMode = themeModeFromStorageValue(value);
+                      ref
+                          .read(themeModeControllerProvider.notifier)
+                          .setThemeMode(nextThemeMode);
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Theme Mode',
+                      prefixIcon: Icon(Icons.dark_mode_outlined),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                _SettingsCard(
                   title: 'Recommendation Controls',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -499,12 +527,15 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1A2430) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD2E6F9)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF33475B) : const Color(0xFFD2E6F9),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,7 +543,7 @@ class _SettingsCard extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: const Color(0xFF123B5C),
+              color: isDark ? const Color(0xFFEAF3FF) : const Color(0xFF123B5C),
               fontWeight: FontWeight.w700,
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ai_powered_coach_2026/core/constants/firestore_collections.dart';
 import 'package:ai_powered_coach_2026/core/widgets/app_empty_view.dart';
@@ -84,7 +85,12 @@ class ProgressTrackingPage extends StatelessWidget {
                 ...entries.map(
                   (entry) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: _SessionTile(entry: entry),
+                    child: _SessionTile(
+                      entry: entry,
+                      onTap: () {
+                        context.push('/analysis-result', extra: entry);
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -259,9 +265,10 @@ class _SummaryMetric extends StatelessWidget {
 }
 
 class _SessionTile extends StatelessWidget {
-  const _SessionTile({required this.entry});
+  const _SessionTile({required this.entry, this.onTap});
 
   final Map<String, dynamic> entry;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -274,41 +281,49 @@ class _SessionTile extends StatelessWidget {
         : null;
     final dateLabel = _formatDate(createdAt);
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD2E6F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            topic == null || topic.isEmpty ? 'Untitled Session' : topic,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: const Color(0xFF123B5C),
-              fontWeight: FontWeight.w700,
-            ),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFD2E6F9)),
           ),
-          const SizedBox(height: 4),
-          Text(
-            dateLabel,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: const Color(0xFF5B7892)),
-          ),
-          const SizedBox(height: 8),
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _SmallScore(label: 'Overall', value: '$overall'),
-              const SizedBox(width: 8),
-              _SmallScore(label: 'Delivery', value: '$delivery'),
-              const SizedBox(width: 8),
-              _SmallScore(label: 'Content', value: '$content'),
+              Text(
+                topic == null || topic.isEmpty ? 'Untitled Session' : topic,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: const Color(0xFF123B5C),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                dateLabel,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: const Color(0xFF5B7892)),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _SmallScore(label: 'Overall', value: '$overall'),
+                  const SizedBox(width: 8),
+                  _SmallScore(label: 'Delivery', value: '$delivery'),
+                  const SizedBox(width: 8),
+                  _SmallScore(label: 'Content', value: '$content'),
+                ],
+              ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

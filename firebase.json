@@ -1,1 +1,32 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"ai-powered-coach-2026","appId":"1:741857275005:android:6a04d9e2207d7fc4d81514","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"ai-powered-coach-2026","configurations":{"android":"1:741857275005:android:6a04d9e2207d7fc4d81514","ios":"1:741857275005:ios:5e8e44b87e3e8636d81514","macos":"1:741857275005:ios:5e8e44b87e3e8636d81514","web":"1:741857275005:web:235e54d1a3573e76d81514","windows":"1:741857275005:web:d3dcbf548f0232b5d81514"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ai-powered-coach-2026",
+          "appId": "1:741857275005:android:6a04d9e2207d7fc4d81514",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ai-powered-coach-2026",
+          "configurations": {
+            "android": "1:741857275005:android:6a04d9e2207d7fc4d81514",
+            "ios": "1:741857275005:ios:5e8e44b87e3e8636d81514",
+            "macos": "1:741857275005:ios:5e8e44b87e3e8636d81514",
+            "web": "1:741857275005:web:235e54d1a3573e76d81514",
+            "windows": "1:741857275005:web:d3dcbf548f0232b5d81514"
+          }
+        }
+      }
+    }
+  }
+}

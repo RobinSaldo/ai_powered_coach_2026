@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ai_powered_coach_2026/core/providers/firebase_providers.dart';
+import 'package:ai_powered_coach_2026/features/access_control/presentation/access_control_page.dart';
 import 'package:ai_powered_coach_2026/features/auth/presentation/login_page.dart';
 import 'package:ai_powered_coach_2026/features/auth/presentation/signup_page.dart';
 import 'package:ai_powered_coach_2026/features/dashboard/presentation/dashboard_page.dart';
 import 'package:ai_powered_coach_2026/features/onboarding/data/onboarding_local_storage.dart';
 import 'package:ai_powered_coach_2026/features/onboarding/presentation/onboarding_page.dart';
 import 'package:ai_powered_coach_2026/features/profile/presentation/profile_page.dart';
+import 'package:ai_powered_coach_2026/features/practice_session/presentation/practice_session_page.dart';
 import 'package:ai_powered_coach_2026/features/progress_tracking/presentation/progress_tracking_page.dart';
 import 'package:ai_powered_coach_2026/features/recommendations/presentation/recommendations_page.dart';
 import 'package:ai_powered_coach_2026/features/settings/presentation/settings_page.dart';
@@ -65,6 +67,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SpeechRecordingPage(),
       ),
       GoRoute(
+        path: '/practice-session',
+        builder: (context, state) => const PracticeSessionPage(),
+      ),
+      GoRoute(
         path: '/analysis-result',
         builder: (context, state) {
           final extra = state.extra;
@@ -89,6 +95,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: '/access-control',
+        builder: (context, state) => const AccessControlPage(),
       ),
     ],
   );

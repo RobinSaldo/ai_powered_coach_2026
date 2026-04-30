@@ -15,6 +15,8 @@ class SignupPage extends ConsumerStatefulWidget {
 
 class _SignupPageState extends ConsumerState<SignupPage> {
   final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -24,6 +26,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   @override
   void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -43,6 +47,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       await ref
           .read(authRepositoryProvider)
           .createUserWithEmailAndPassword(
+            firstName: _firstNameController.text.trim(),
+            lastName: _lastNameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
@@ -75,6 +81,17 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     }
     if (!value.contains('@')) {
       return 'Invalid email format';
+    }
+    return null;
+  }
+
+  String? _validateName(String? value, String label) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return '$label is required';
+    }
+    if (trimmed.length < 2) {
+      return '$label is too short';
     }
     return null;
   }
@@ -130,6 +147,71 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 400;
+                if (compact) {
+                  return Column(
+                    children: [
+                      TextFormField(
+                        controller: _firstNameController,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'First Name',
+                          hintText: 'Juan',
+                          prefixIcon: Icon(Icons.badge_outlined),
+                        ),
+                        validator: (value) =>
+                            _validateName(value, 'First name'),
+                      ),
+                      const SizedBox(height: 14),
+                      TextFormField(
+                        controller: _lastNameController,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'Last Name',
+                          hintText: 'Dela Cruz',
+                          prefixIcon: Icon(Icons.badge_rounded),
+                        ),
+                        validator: (value) => _validateName(value, 'Last name'),
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _firstNameController,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'First Name',
+                          hintText: 'Juan',
+                          prefixIcon: Icon(Icons.badge_outlined),
+                        ),
+                        validator: (value) =>
+                            _validateName(value, 'First name'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _lastNameController,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(
+                          labelText: 'Last Name',
+                          hintText: 'Dela Cruz',
+                          prefixIcon: Icon(Icons.badge_rounded),
+                        ),
+                        validator: (value) => _validateName(value, 'Last name'),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 14),
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
